@@ -1,30 +1,35 @@
+// src/routes/insights.js
 import { Router } from "express";
-import OpenAI from "openai";
+import { getRepoCommits } from "./github.js"; // Corrigido para apontar para o arquivo certo
+import { generateInsights } from "../gemini.js";
 
 const router = Router();
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-// Gera insights a partir de commits
-router.post("/insights", async (req, res) => {
+// Rota principal de insights
+router.get("/", async (req, res) => {
   try {
-    const { commits } = req.body;
-    if (!commits || commits.length === 0) {
-      return res.status(400).json({ error: "Nenhum commit enviado" });
+    const { owner, repo, since, until } = req.query;
+
+    if (!owner || !repo) {
+      return res.status(400).json({ error: "Informe owner e repo" });
     }
 
-    const commitMessages = commits.map(c => c.commit.message).join("\n");
+    // Pega os commits do GitHub
+    const commits = await getRepoCommits({ owner, repo, since, until });
+    const messages = commits.map(c => c.message).join("\n");
 
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        { role: "system", content: "Você é um analista de produtividade de desenvolvedores." },
-        { role: "user", content: `Analise esses commits e me dê insights sobre padrões de produtividade:\n${commitMessages}` }
-      ],
+    // Gera insights usando OpenAI
+    const insights = await generateInsights(messages);
+
+    // Retorna JSON com commits e insights
+    res.json({
+      totalCommits: commits.length,
+      insights,
+      commits
     });
-
-    res.json({ insights: completion.choices[0].message.content });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error("Erro ao gerar insights:", err);
+    res.status(500).json({ error: "Erro ao gerar insights" });
   }
 });
 
