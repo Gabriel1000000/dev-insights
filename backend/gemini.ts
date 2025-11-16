@@ -1,10 +1,13 @@
 import { GoogleGenAI } from "@google/genai";
-import "dotenv/config";
+// import "dotenv/config";
 
 const apiKey = process.env.GEMINI_API_KEY;
+if (!apiKey) {
+  throw new Error("GEMINI_API_KEY não definida no .env");
+}
 const ai = new GoogleGenAI({ apiKey });
 
-export async function generateInsights(commitMessages) {
+export async function generateInsights(commitMessages:string): Promise<string> {
   try {
     const prompt = `
     Você é um assistente que analisa produtividade de desenvolvedores.
@@ -30,7 +33,11 @@ export async function generateInsights(commitMessages) {
       },
     });
 
-    return response.text; // no @google/genai a saída é `response.text`
+    const text = response.text;
+    if (!text) {
+      throw new Error("Resposta vazia do modelo Gemini");
+    }
+    return text; // no @google/genai a saída é `response.text`
   } catch (error) {
     console.error("Erro ao gerar insights:", error);
     return "Não foi possível gerar insights.";
