@@ -5,7 +5,7 @@
   "main": "server.js",
   "type": "module",
   "scripts": {
-    "start:dev": "tsx --env-file=backend/.env backend/server.ts",
+    "start:dev": "tsx --env-file=.env src/server.ts",
     "start": "node --env-file=backend/.env backend/server.js",
     "start:watch": "tsx WATCH --env-file=.env src/server.ts",
     "dist": "tsup src",

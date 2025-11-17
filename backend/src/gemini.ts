@@ -1,7 +1,8 @@
 import { GoogleGenAI } from "@google/genai";
-// import "dotenv/config";
+import { config } from "./config/config.js";
 
-const apiKey = process.env.GEMINI_API_KEY;
+const apiKey = config.geminiApiKey;
+
 if (!apiKey) {
   throw new Error("GEMINI_API_KEY não definida no .env");
 }
